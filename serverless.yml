@@ -1,0 +1,55 @@
+org: splorg
+app: alura-serverless
+service: api
+frameworkVersion: '3'
+
+params:
+  default:
+    dbName: alura-serverless
+  dev:
+    connectionString: mongodb://localhost:27017/${self:params.default.dbName}
+    salt: SJxV9oNKRtEks8un3W3jUZSkHwrxBOdZ
+    jwtSecret: rmWCf6BYLtMU0wuOIlBh5dwxAUsIh1jY4Io11EYGxUt7rjWh1ixihBeO3FooEntm
+  prod:
+
+provider:
+  httpApi:
+    cors: true
+  name: aws
+  runtime: nodejs14.x
+  environment:
+    MONGODB_CONNECTION_STRING: ${param:connectionString}
+    MONGODB_DB_NAME: ${param:dbName}
+    SALT: ${params.salt}
+    JWT_SECRET: ${params.jwtSecret}
+  region: sa-east-1
+
+functions:
+  sendResponse:
+    handler: api/handlers.sendResponse
+    events:
+      - httpApi:
+          path: /api/results
+          method: post
+          request:
+            schemas:
+              application/json: ${file(./api/schemas/sendResponse.json)}
+  getResult:
+    handler: api/handlers.getResult
+    events:
+      - httpApi:
+          path: /api/results/{id}
+          method: get
+  login:
+    handler: api/handlers.login
+    events:
+      - httpApi:
+          path: /api/login
+          method: post
+          request:
+            schemas:
+              application/json: ${file(./api/schemas/login.json)}
+  
+
+plugins:
+  - serverless-offline
